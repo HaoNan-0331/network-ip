@@ -1,0 +1,59 @@
+{
+  "name": "network-ip",
+  "productName": "NetworkIP",
+  "version": "1.0.0",
+  "description": "Network IP/MAC Monitoring System",
+  "main": ".vite/build/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron-forge start",
+    "dev": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "eslint --ext .ts,.tsx .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": ["network", "ip", "mac", "monitoring"],
+  "author": {
+    "name": "wanghaonan",
+    "email": "haonan0331@gmail.com"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@electron-forge/cli": "^7.11.1",
+    "@electron-forge/maker-deb": "^7.11.1",
+    "@electron-forge/maker-rpm": "^7.11.1",
+    "@electron-forge/maker-squirrel": "^7.11.1",
+    "@electron-forge/maker-zip": "^7.11.1",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.11.1",
+    "@electron-forge/plugin-fuses": "^7.11.1",
+    "@electron-forge/plugin-vite": "^7.11.1",
+    "@electron/fuses": "^1.8.0",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/electron-squirrel-startup": "^1.0.2",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
+    "@vitejs/plugin-vue": "^5.2.4",
+    "@vue/test-utils": "^2.4.6",
+    "electron": "41.0.3",
+    "eslint": "^8.57.1",
+    "eslint-plugin-import": "^2.32.0",
+    "happy-dom": "^17.6.3",
+    "typescript": "~5.9.3",
+    "vite": "^5.4.21",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.8.0",
+    "element-plus": "^2.13.5",
+    "electron-squirrel-startup": "^1.0.1",
+    "pinia": "^3.0.4",
+    "ssh2": "^1.17.0",
+    "ssh2-promise": "^1.0.3",
+    "telnet-client": "^2.2.11",
+    "vue": "^3.5.30"
+  }
+}
