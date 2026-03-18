@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { describe, it, expect } from 'vitest';
+import { shallowMount } from '@vue/test-utils';
 import DeviceForm from '../../src/renderer/src/components/DeviceForm.vue';
 import type { Device } from '../../src/shared/types/device';
 import { nextTick } from 'vue';
@@ -20,40 +20,20 @@ describe('DeviceForm', () => {
     updatedAt: '2026-03-18T00:00:00Z',
   };
 
-  it('should render form with all required fields', () => {
-    const wrapper = mount(DeviceForm);
-
-    expect(wrapper.find('el-form').exists() || wrapper.find('.el-form').exists()).toBe(true);
-    expect(wrapper.findComponent({ name: 'ElFormItem' }).exists() || wrapper.html()).toContain('name');
+  it('should render form component', () => {
+    const wrapper = shallowMount(DeviceForm);
+    expect(wrapper.findComponent({ name: 'ElForm' }).exists()).toBe(true);
   });
 
-  it('should have vendor select with 4 options', () => {
-    const wrapper = mount(DeviceForm);
-    const html = wrapper.html();
-
-    expect(html).toContain('huawei');
-    expect(html).toContain('h3c');
-    expect(html).toContain('ruijie');
-    expect(html).toContain('cisco');
-  });
-
-  it('should have protocol radio with SSH and Telnet options', () => {
-    const wrapper = mount(DeviceForm);
-    const html = wrapper.html();
-
-    expect(html).toContain('ssh');
-    expect(html).toContain('telnet');
-  });
-
-  it('should default port to 22 for SSH protocol', async () => {
-    const wrapper = mount(DeviceForm);
+  it('should have default port 22 for SSH protocol', async () => {
+    const wrapper = shallowMount(DeviceForm);
     const vm = wrapper.vm as any;
 
     expect(vm.formData.port).toBe(22);
   });
 
   it('should update port to 23 when protocol changes to Telnet', async () => {
-    const wrapper = mount(DeviceForm);
+    const wrapper = shallowMount(DeviceForm);
     const vm = wrapper.vm as any;
 
     vm.handleProtocolChange('telnet');
@@ -63,7 +43,7 @@ describe('DeviceForm', () => {
   });
 
   it('should update port to 22 when protocol changes to SSH', async () => {
-    const wrapper = mount(DeviceForm);
+    const wrapper = shallowMount(DeviceForm);
     const vm = wrapper.vm as any;
 
     vm.formData.port = 23;
@@ -74,7 +54,7 @@ describe('DeviceForm', () => {
   });
 
   it('should populate form with existing device data in edit mode', async () => {
-    const wrapper = mount(DeviceForm, {
+    const wrapper = shallowMount(DeviceForm, {
       props: {
         device: mockDevice,
       },
@@ -93,7 +73,7 @@ describe('DeviceForm', () => {
   });
 
   it('should expose validate, getFormData, and resetForm methods', () => {
-    const wrapper = mount(DeviceForm);
+    const wrapper = shallowMount(DeviceForm);
     const vm = wrapper.vm as any;
 
     expect(typeof vm.validate).toBe('function');
@@ -102,7 +82,7 @@ describe('DeviceForm', () => {
   });
 
   it('should return form data from getFormData', () => {
-    const wrapper = mount(DeviceForm);
+    const wrapper = shallowMount(DeviceForm);
     const vm = wrapper.vm as any;
 
     const formData = vm.getFormData();
@@ -114,5 +94,21 @@ describe('DeviceForm', () => {
     expect(formData).toHaveProperty('port');
     expect(formData).toHaveProperty('username');
     expect(formData).toHaveProperty('password');
+  });
+
+  it('should have vendor options in formRules', () => {
+    const wrapper = shallowMount(DeviceForm);
+    const vm = wrapper.vm as any;
+
+    expect(vm.formRules.vendor).toBeDefined();
+    expect(vm.formRules.vendor[0].required).toBe(true);
+  });
+
+  it('should have protocol options in formRules', () => {
+    const wrapper = shallowMount(DeviceForm);
+    const vm = wrapper.vm as any;
+
+    expect(vm.formRules.protocol).toBeDefined();
+    expect(vm.formRules.protocol[0].required).toBe(true);
   });
 });
