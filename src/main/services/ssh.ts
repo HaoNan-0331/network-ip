@@ -1,4 +1,4 @@
-import { SshPromiseClient } from 'ssh2-promise';
+import { Client } from 'ssh2';
 
 export interface SSHConfig {
   host: string;
@@ -6,7 +6,6 @@ export interface SSHConfig {
   username: string;
   password: string;
   timeout?: number;
-  retries?: number;
 }
 
 export class SSHService {
@@ -15,44 +14,76 @@ export class SSHService {
   constructor(config: SSHConfig) {
     this.config = {
       timeout: config.timeout ?? 10000,
-      retries: config.retries ?? 3,
       ...config,
     };
   }
 
-  async connect(): Promise<SshPromiseClient> {
-    let lastError: Error | null = null;
+  async connect(): Promise<Client> {
+    console.log(`[SSH] Starting connection to ${this.config.host}:${this.config.port}`);
 
-    for (let attempt = 0; attempt < this.config.retries; attempt++) {
-      try {
-        const ssh = new SshPromiseClient({
-          host: this.config.host,
-          port: this.config.port,
-          username: this.config.username,
-          password: this.config.password,
-          readyTimeout: this.config.timeout,
-        });
+    return new Promise((resolve, reject) => {
+      const client = new Client();
 
-        await ssh.connect();
-        return ssh;
-      } catch (error) {
-        lastError = error as Error;
-        if (attempt < this.config.retries - 1) {
-          const delay = Math.min(1000 * Math.pow(2, attempt), 30000);
-          await new Promise(resolve => setTimeout(resolve, delay));
+      const timeoutId = setTimeout(() => {
+        console.error(`[SSH] Connection timeout after ${this.config.timeout}ms`);
+        client.destroy();
+        reject(new Error(`SSH connection timeout after ${this.config.timeout}ms`));
+      }, this.config.timeout);
+
+      client.on('ready', () => {
+        clearTimeout(timeoutId);
+        console.log(`[SSH] Connected successfully to ${this.config.host}`);
+        resolve(client);
+      });
+
+      client.on('error', (err) => {
+        clearTimeout(timeoutId);
+        console.error(`[SSH] Connection error:`, err.message);
+        reject(err);
+      });
+
+      console.log(`[SSH] Connecting...`);
+      client.connect({
+        host: this.config.host,
+        port: this.config.port,
+        username: this.config.username,
+        password: this.config.password,
+        readyTimeout: this.config.timeout,
+      });
+    });
+  }
+
+  async executeCommand(client: Client, command: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      client.exec(command, (err, stream) => {
+        if (err) {
+          reject(err);
+          return;
         }
-      }
-    }
 
-    throw lastError;
+        let output = '';
+        stream.on('data', (data: Buffer) => {
+          output += data.toString();
+        });
+        stream.stderr.on('data', (data: Buffer) => {
+          output += data.toString();
+        });
+        stream.on('close', () => {
+          resolve(output);
+        });
+        stream.on('error', reject);
+      });
+    });
   }
 
-  async executeCommand(ssh: SshPromiseClient, command: string): Promise<string> {
-    const result = await ssh.exec(command);
-    return result;
-  }
-
-  async disconnect(ssh: SshPromiseClient): Promise<void> {
-    await ssh.close();
+  async disconnect(client: Client): Promise<void> {
+    console.log(`[SSH] Disconnecting...`);
+    return new Promise((resolve) => {
+      client.on('end', () => {
+        console.log(`[SSH] Disconnected successfully`);
+        resolve();
+      });
+      client.end();
+    });
   }
 }

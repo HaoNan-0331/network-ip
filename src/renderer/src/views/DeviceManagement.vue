@@ -83,15 +83,19 @@ async function handleDelete(device: Device) {
 }
 
 async function handleTestConnection(id: number) {
+  console.log('[Frontend] Test connection clicked for device:', id);
   try {
     ElMessage.info('正在测试连接...');
+    console.log('[Frontend] Calling deviceStore.testConnection...');
     const result = await deviceStore.testConnection(id);
+    console.log('[Frontend] Test result:', result);
     if (result.success) {
       ElMessage.success('连接成功');
     } else {
       ElMessage.error(`连接失败: ${result.error}`);
     }
   } catch (error) {
+    console.error('[Frontend] Test connection error:', error);
     ElMessage.error(`连接测试异常: ${(error as Error).message}`);
   }
 }

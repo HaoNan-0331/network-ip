@@ -41,16 +41,22 @@ export const useDeviceStore = defineStore('devices', () => {
   }
 
   async function testConnection(id: number): Promise<ConnectionTestResult> {
-    const result = await window.electronAPI.devices.testConnection(id);
-    if (result.success) {
+    console.log(`[Store] testConnection called for id: ${id}`);
+    loading.value = true;
+    try {
+      console.log('[Store] Calling IPC testConnection...');
+      const result = await window.electronAPI.devices.testConnection(id);
+      console.log('[Store] IPC result:', result);
+      // 重新获取设备列表以更新状态
       await fetchAll();
-    } else {
-      const device = devices.value.find(d => d.id === id);
-      if (device) {
-        device.status = 'offline';
-      }
+      console.log('[Store] Devices refreshed');
+      return result;
+    } catch (error) {
+      console.error('[Store] testConnection error:', error);
+      throw error;
+    } finally {
+      loading.value = false;
     }
-    return result;
   }
 
   return {

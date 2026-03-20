@@ -3,6 +3,14 @@ import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { initDatabase, closeDatabase } from './services/database';
 import { registerDeviceHandlers } from './ipc/devices';
+import { registerARPHandlers } from './ipc/arp';
+import { registerNetworkHandlers } from './ipc/network';
+import { registerAnomalyHandlers } from './ipc/anomaly';
+import { registerExportHandlers } from './ipc/export';
+import { registerOUIHandlers } from './ipc/oui';
+import { registerSchedulerHandlers } from './ipc/scheduler';
+import { registerSettingsHandlers } from './ipc/settings';
+import { SchedulerService } from './services/schedulerService';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -18,7 +26,7 @@ const createWindow = () => {
     minHeight: 600,
     title: 'NetworkIP - 网络IP/MAC监控系统',
     webPreferences: {
-      preload: path.join(__dirname, '../preload/index.js'),
+      preload: path.join(__dirname, 'index.js'),
       nodeIntegration: false,
       contextIsolation: true,
     },
@@ -43,6 +51,14 @@ const createWindow = () => {
 app.on('ready', () => {
   initDatabase();
   registerDeviceHandlers();
+  registerARPHandlers();
+  registerNetworkHandlers();
+  registerAnomalyHandlers();
+  registerExportHandlers();
+  registerOUIHandlers();
+  registerSchedulerHandlers();
+  registerSettingsHandlers();
+  SchedulerService.start();
   createWindow();
 });
 

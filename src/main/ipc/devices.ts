@@ -97,52 +97,66 @@ export function registerDeviceHandlers(): void {
   });
 
   ipcMain.handle('devices:testConnection', async (_, id: number): Promise<ConnectionTestResult> => {
+    console.log(`[IPC] testConnection called for device id: ${id}`);
     const db = getDatabase();
     const device = db.prepare('SELECT * FROM devices WHERE id = ?').get(id) as any;
 
     if (!device) {
+      console.error('[IPC] Device not found:', id);
       return { success: false, error: 'Device not found' };
     }
 
+    console.log(`[IPC] Device info: ${device.name} (${device.ip}:${device.port}) via ${device.protocol}`);
     const password = credentialService.decrypt(device.encrypted_password);
+    console.log(`[IPC] Password decrypted, length: ${password.length}`);
 
     try {
       if (device.protocol === 'ssh') {
+        console.log('[IPC] Creating SSH service...');
         const sshService = new SSHService({
           host: device.ip,
           port: device.port,
           username: device.username,
           password,
-          timeout: 10000,
-          retries: 2,
+          timeout: 15000,
         });
 
+        console.log('[IPC] Calling ssh.connect()...');
         const ssh = await sshService.connect();
+        console.log('[IPC] SSH connected, now disconnecting...');
         await sshService.disconnect(ssh);
+        console.log('[IPC] SSH disconnected');
       } else {
+        console.log('[IPC] Creating Telnet service...');
         const telnetService = new TelnetService({
           host: device.ip,
           port: device.port,
           username: device.username,
           password,
-          timeout: 10000,
+          timeout: 15000,
         });
 
+        console.log('[IPC] Calling telnet.connect()...');
         const conn = await telnetService.connect();
+        console.log('[IPC] Telnet connected, now disconnecting...');
         await telnetService.disconnect(conn);
+        console.log('[IPC] Telnet disconnected');
       }
 
+      console.log(`[IPC] Connection test SUCCESS: ${device.name}`);
       db.prepare(`
         UPDATE devices SET status = 'online', last_checked = CURRENT_TIMESTAMP WHERE id = ?
       `).run(id);
 
       return { success: true };
     } catch (error) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      console.error(`[IPC] Connection test FAILED: ${device.name}`, errMsg);
       db.prepare(`
         UPDATE devices SET status = 'offline', last_checked = CURRENT_TIMESTAMP WHERE id = ?
       `).run(id);
 
-      return { success: false, error: (error as Error).message };
+      return { success: false, error: errMsg };
     }
   });
 }
