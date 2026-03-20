@@ -41,8 +41,8 @@ const createWindow = () => {
     );
   }
 
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // 生产环境不打开DevTools
+  // mainWindow.webContents.openDevTools();
 };
 
 // This method will be called when Electron has finished
